@@ -3,10 +3,12 @@ from pygame import constants
 from bicubic_spline import *
 from renderer import *
 from calculations import *
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d, make_interp_spline, BSpline
 
 U_STEPS = 2
 V_STEPS = 160
-IT_STEP = 0.1
+IT_STEP = 0.05
 DELTA = 0.5
 ITERATIONS = 2
 
@@ -25,24 +27,6 @@ def create_object(app, spl_x, spl_y, spl_z, vector_u, vector_v):
             except:
                 z = tmp_z
             vertexes.append([x, y, z, 1])
-            # #if v == 2*np.pi - 2*np.pi/v_steps and u != 1 - 1/u_steps:
-            # if v == 1 - 1/v_steps and u != 1- 1/u_steps:
-            #     faces.append([idx, idx-v_steps+1])
-            #     faces.append([idx, (idx+v_steps) % (u_steps*v_steps)])
-            # #elif u == 1 - 1/u_steps and v != 2*np.pi - 2*np.pi/v_steps:
-            # elif u == 1 - 1/u_steps and v != 1 - 1/v_steps:
-            #     faces.append([idx, idx+1])
-            # #elif u == 1 - 1/u_steps and v == 2*np.pi - 2*np.pi/v_steps:
-            # elif u == 1 - 1/u_steps and v == 1 - 1/v_steps:
-            #     faces.append([idx, idx - v_steps + 1])
-            # else:
-            #     faces.append([idx, idx + 1])
-            #     faces.append([idx, idx + v_steps])
-
-            # if v == 1 - 1/v_steps and u != 1 - 1/u_steps:
-            #     faces.append([idx, (idx+1-v_steps)])
-            # else:
-            #     faces.append([idx, (idx+1) % (u_steps*v_steps)])
 
             faces.append([idx, (idx+1) % (u_steps*v_steps)])
             idx += 1
@@ -215,17 +199,18 @@ def distance_between_points(first_point, second_point):
 def delete_inner_points(points, len_u, len_v):
     new_points = []
     matrix_p = np.reshape(points, (len_u, len_v, 3))
-    depth = 9
+    depth = 8
     for layer_idx in range(len(matrix_p)):
         layer_points_tmp = matrix_p[layer_idx]
+        layer_len = len(layer_points_tmp)
         idx = 0
-        while idx < len(layer_points_tmp) - depth - 2:
+        while idx < len(layer_points_tmp) - 1:
             len_to_delete = 0
-            distance_to_next = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][idx+1])
+            distance_to_next = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][(idx+1) % (layer_len - 1)])
             fl = False
             for j in range(idx + 2, idx+depth-1, 1):
-                distance_to_j = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][j])
-                distance_to_j_plus = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][j+1])
+                distance_to_j = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][j % (layer_len - 1)])
+                distance_to_j_plus = distance_between_points(matrix_p[layer_idx][idx], matrix_p[layer_idx][(j+1) % (layer_len - 1)])
                 if distance_to_next > distance_to_j and distance_to_next < distance_to_j_plus:
                     fl = True
                     len_to_delete = j - idx
@@ -236,29 +221,72 @@ def delete_inner_points(points, len_u, len_v):
             new_points.append([new_x, new_y, new_z])
 
             if fl:
-                idx = idx + len_to_delete + 1
+                idx = (idx + len_to_delete + 1) % (layer_len - 1)
             else:
                 idx += 1
 
-        for i in range(len(layer_points_tmp) - depth - 3, len(layer_points_tmp)):
-            new_x = matrix_p[layer_idx][i][0]
-            new_y = matrix_p[layer_idx][i][1]
-            new_z = matrix_p[layer_idx][i][2]
-            new_points.append([new_x, new_y, new_z])
+        new_x = matrix_p[layer_idx][layer_len - 1][0]
+        new_y = matrix_p[layer_idx][layer_len - 1][1]
+        new_z = matrix_p[layer_idx][layer_len - 1][2]
+        new_points.append([new_x, new_y, new_z])
+
+
 
     new_points = np.array(new_points)
     new_len_v = int((len(new_points) / len_u))
     return new_points, new_len_v
 
+# S = a * b
+def calculate_area(points, len_u, len_v, R):
+    matrix_p = np.reshape(points, (len_u, len_v, 3))
+    total_area = 0
+    for layer_idx in range(len(matrix_p) - 1):
+        for point_idx in range(len(matrix_p[layer_idx])):
+            a = np.linalg.norm(matrix_p[layer_idx][point_idx] - matrix_p[layer_idx + 1][point_idx])
+            # Проверяем, лежит ли прямоугольник на окружности R
+            current_r = np.linalg.norm(matrix_p[layer_idx][point_idx])
+            next_r = np.linalg.norm(matrix_p[layer_idx][(point_idx+1) % (len(matrix_p[layer_idx]) - 1)])
+            if current_r < (R - 1/2*IT_STEP) and next_r < (R - 1/2*IT_STEP):
+                b = np.linalg.norm(matrix_p[layer_idx][point_idx] - matrix_p[layer_idx][(point_idx+1) % (len(matrix_p[layer_idx]) - 1)])
+            else:
+                b = 0
+            area = a * b
+            total_area += area
+    return total_area
+         
+
 if __name__ == '__main__':
     app = SoftwareRenderer()
     app.bind_camera(0, 0, -8)
+    # 1 нормальный набор (можно использовать для визуализации):
     a = 0.5
     b = 2
     r = 0.5
     R = 3
     h = 4.5
     H = 6
+    # 2 нормальный набор:
+    a = 1
+    b = 1
+    r = 1
+    R = 2.5
+    h = 4.5
+    H = 6
+    # 3 нормальный набор (под вопросом, но работает):
+    a = 1
+    b = 5
+    r = 1
+    R = 6
+    h = 4.5
+    H = 6
+    # 4 нормальный набор:
+    a = 0.5
+    b = 2
+    r = 1
+    R = 3.5
+    h = 4.5
+    H = 6
+
 
     control_points, len_u, len_v = init_charge(a, b, r, R, h)
     matrix_f_x, matrix_f_y, matrix_f_z = points_to_matrix(control_points, len_u, len_v)
@@ -280,23 +308,28 @@ if __name__ == '__main__':
     app.init_object(charge)
     run = True
     it = 0
+    vector_it = []
+    vector_area = []
+    eps = 0.00000002
     while run:
         app.draw()
         key = pg.key.get_pressed()
-        #if it < ITERATIONS:
         if key[pg.K_SPACE]:
             it += 1
 
-            if it == 8:
-                print(it)
+            # if it == 10:
+            #    print(it)
 
             control_points = points_shift(control_points, control_vector_u, control_vector_v, spl_x, spl_y, spl_z, R)
-            if it <= 40:
-                control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
+            control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
             matrix_f_x, matrix_f_y, matrix_f_z = points_to_matrix(control_points, len_control_u, len_control_v)
 
             control_vector_u = np.arange(0, 1, 1/len_control_u)
             control_vector_v = np.arange(-2/len_control_v, 1 + 2/len_control_v, 1/len_control_v)
+            if control_vector_v[-2] > 1.0 + eps :
+                one_idx = np.where(control_vector_v == 1.0)[0][0]
+                print(one_idx)
+                control_vector_v = control_vector_v[:(one_idx + 2)]
 
             spl_x = Bispline(control_vector_u, control_vector_v, matrix_f_x)
             spl_y = Bispline(control_vector_u, control_vector_v, matrix_f_y)
@@ -304,6 +337,10 @@ if __name__ == '__main__':
 
             # draw_vector_u = np.arange(0, 1, 1/4)
             # draw_vector_v = np.arange(0, 1, 1/512)
+
+            
+            vector_it.append(it)
+            vector_area.append(calculate_area(control_points, len_control_u, len_control_v, R))
 
             charge, _ = create_object(app, spl_x, spl_y, spl_z, draw_vector_u, draw_vector_v)
 
@@ -317,3 +354,15 @@ if __name__ == '__main__':
         pg.display.set_caption(str(str(app.clock.get_fps()) + "   it: " + str(it)))
         pg.display.flip()
         app.clock.tick(app.FPS)
+
+
+    x = np.append(vector_it, vector_it[-1] + 1)
+    y = np.append(vector_area, 0)
+    x_new = np.linspace(x[0], x[-1], 300)
+    f = interp1d(x, y, kind='cubic')
+    # spl_area = make_interp_spline(x, y, k=3)
+    # smooth_area = spl_area(x_new)
+
+    plt.plot(x_new, f(x_new))
+    #plt.plot(x_new, smooth_area)
+    plt.show()
