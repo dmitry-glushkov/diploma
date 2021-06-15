@@ -1,6 +1,4 @@
 main.spec
-/.vscode
-/__pycache__
+__pycache__/
 /dist
 /build
-/__pycache__

@@ -11,7 +11,7 @@ V_STEPS = 160
 IT_STEP = 0.05
 DELTA = 0.5
 ITERATIONS = 2
-
+#
 def create_object(app, spl_x, spl_y, spl_z, vector_u, vector_v):
     vertexes, faces = [], []
     idx = 0
