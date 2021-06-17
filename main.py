@@ -28,10 +28,27 @@ def create_object(app, spl_x, spl_y, spl_z, vector_u, vector_v):
                 z = tmp_z
             vertexes.append([x, y, z, 1])
 
-            faces.append([idx, (idx+1) % (u_steps*v_steps)])
+            # faces.append([idx, (idx+1) % (u_steps*v_steps)])
+            # idx += 1
+
+    len_u = len(vector_u)
+    len_v = len(vector_v)
+    for i in range(len_u):
+        for j in range(len_v):
+            if i != len_u - 1:
+                if j != len_v - 1:
+                    faces.append([idx, idx + 1])
+                    faces.append([idx, idx + len_v])
+                else:
+                    faces.append([idx, idx - len_v + 1])
+                    faces.append([idx, idx + len_v])
+            else:
+                if j != len_v - 1:
+                    faces.append([idx, idx+1])
+                else:
+                    faces.append([idx, idx - len_v + 1])
+
             idx += 1
-
-
 
     return Object(app, vertexes, faces), vertexes
 
@@ -90,7 +107,9 @@ def points_shift(points, vector_u, vector_v, spl_x, spl_y, spl_z, R):
                 if (np.linalg.norm([new_x, new_y]) < R):
                     new_points.append([new_x, new_y, new_z])
                 else:
+                    #tmp = np.linalg.norm([points[idx][0], points[idx][1], points[idx][2]]) / R
                     new_points.append([points[idx][0], points[idx][1], points[idx][2]])
+                    #new_points.append([points[idx][0] / tmp, points[idx][1] / tmp, points[idx][2] / tmp])
                 idx += 1
 
     new_points = np.array(new_points)
@@ -272,7 +291,7 @@ if __name__ == '__main__':
     a = 0.5
     b = 2
     r = 1
-    R = 3.5
+    R = 6 # 3.5
     h = 4.5
     H = 6
 
@@ -310,7 +329,7 @@ if __name__ == '__main__':
             #    print(it)
 
             control_points = points_shift(control_points, control_vector_u, control_vector_v, spl_x, spl_y, spl_z, R)
-            control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
+            #control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
             matrix_f_x, matrix_f_y, matrix_f_z = points_to_matrix(control_points, len_control_u, len_control_v)
 
             control_vector_u = np.arange(0, 1, 1/len_control_u)
@@ -324,8 +343,8 @@ if __name__ == '__main__':
             spl_y = Bispline(control_vector_u, control_vector_v, matrix_f_y)
             spl_z = Bispline(control_vector_u, control_vector_v, matrix_f_z)
 
-            # draw_vector_u = np.arange(0, 1, 1/4)
-            # draw_vector_v = np.arange(0, 1, 1/512)
+            draw_vector_u = np.arange(0, 1, 1/2)
+            draw_vector_v = np.arange(0, 1 + 1/256, 1/256)
 
             
             vector_it.append(it)
