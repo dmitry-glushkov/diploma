@@ -12,7 +12,7 @@ class Spline:
         self.vector_f = vector_f
 
     def calculate_spline(self):
-        N = len(self.vector_f)  #(N = книжная N+1 - количество промежутков)
+        N = len(self.vector_f)
         vector_h = np.zeros(N-1)
         vector_b = np.zeros(N)
         vector_avg_f = np.zeros(N-1)
@@ -97,27 +97,3 @@ class Spline:
 def get_normal(u, spline_x: Spline, spline_y: Spline):
     return Vector4f(spline_x.derivative(u), spline_y.derivative(u), 0, 1)
 
-
-
-
-# # тесты
-# vec_u = np.arange(0, 2*np.pi, np.pi/4)
-# x = []
-# y = []
-# for u in vec_u:
-#     x.append(np.cos(u))
-#     y.append(np.sin(u))
-
-# Sx = Spline(vec_u, x)
-# Sy = Spline(vec_u, y)
-# Sx.calculate_spline()
-# Sy.calculate_spline()
-
-# for u in vec_u:
-#     print([Sx.derivative(u) / np.sqrt(Sx.derivative(u)**2 + Sy.derivative(u)**2), 
-#            Sy.derivative(u) / np.sqrt(Sx.derivative(u)**2 + Sy.derivative(u)**2)])
-
-# print('------')
-# for u in vec_u:
-#     print([Sx.test_derivative(u) / np.sqrt(Sx.test_derivative(u)**2 + Sy.test_derivative(u)**2),
-#         Sy.test_derivative(u) / np.sqrt(Sx.test_derivative(u)**2 + Sy.test_derivative(u)**2)])

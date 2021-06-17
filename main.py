@@ -99,11 +99,6 @@ def points_shift(points, vector_u, vector_v, spl_x, spl_y, spl_z, R):
 def get_num_deriv(u, v, spl_x, spl_y, spl_z, vector_u, vector_v):
     eps = 0.01
 
-    # tmp_idx_v = np.where(vector_v == v)
-    # tmp_idx_u = np.where(vector_u == u)
-    # idx_v = tmp_idx_v[0][0]
-    # idx_u = tmp_idx_u[0][0]
-
     if u == vector_u[0]:
         x_u = 2*spl_x.get_point(eps, v) - 2*spl_x.get_point(0, v) \
             - (spl_x.get_point(2*eps, v) - spl_x.get_point(0, v))/2 
@@ -119,9 +114,6 @@ def get_num_deriv(u, v, spl_x, spl_y, spl_z, vector_u, vector_v):
         z_u = 2*spl_z.get_point(u, v) - 2*spl_z.get_point(u-eps, v) \
             - (spl_z.get_point(u, v) - spl_z.get_point(u - 2*eps, v))/2
     else:
-        # x_u = (spl_x.get_point(u+vector_u[idx_u+1], v) - spl_x.get_point(u-vector_u[idx_u-1], v)) / 2
-        # y_u = (spl_y.get_point(u+vector_u[idx_u+1], v) - spl_y.get_point(u-vector_u[idx_u-1], v)) / 2
-        # z_u = (spl_z.get_point(u+vector_u[idx_u+1], v) - spl_z.get_point(u-vector_u[idx_u-1], v)) / 2
         x_u = (spl_x.get_point(u+eps, v) - spl_x.get_point(u-eps, v)) / 2
         y_u = (spl_y.get_point(u+eps, v) - spl_y.get_point(u-eps, v)) / 2
         z_u = (spl_z.get_point(u+eps, v) - spl_z.get_point(u-eps, v)) / 2
@@ -135,9 +127,6 @@ def get_num_deriv(u, v, spl_x, spl_y, spl_z, vector_u, vector_v):
         y_v = spl_y.get_point(u, vector_v[0]) - spl_y.get_point(u, v - (vector_v[-1] - vector_v[-2])) / 2
         z_v = spl_z.get_point(u, vector_v[0]) - spl_z.get_point(u, v - (vector_v[-1] - vector_v[-2])) / 2
     else:
-        # x_v = (spl_x.get_point(u, v+vector_v[idx_v+1]) - spl_x.get_point(u, v-vector_v[idx_v-1])) / 2
-        # y_v = (spl_y.get_point(u, v+vector_v[idx_v+1]) - spl_y.get_point(u, v-vector_v[idx_v-1])) / 2
-        # z_v = (spl_z.get_point(u, v+vector_v[idx_v+1]) - spl_z.get_point(u, v-vector_v[idx_v-1])) / 2
         x_v = (spl_x.get_point(u, v+eps) - spl_x.get_point(u, v-eps)) / 2
         y_v = (spl_y.get_point(u, v+eps) - spl_y.get_point(u, v-eps)) / 2
         z_v = (spl_z.get_point(u, v+eps) - spl_z.get_point(u, v-eps)) / 2
