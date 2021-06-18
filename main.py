@@ -274,26 +274,26 @@ if __name__ == '__main__':
     h = 4.5
     H = 6
     # 2 нормальный набор:
-    a = 1
-    b = 1
-    r = 1
-    R = 2.5
-    h = 4.5
-    H = 6
+    # a = 1
+    # b = 1
+    # r = 1
+    # R = 2.5
+    # h = 4.5
+    # H = 6
     # 3 нормальный набор (под вопросом, но работает):
-    a = 1
-    b = 5
-    r = 1
-    R = 6
-    h = 4.5
-    H = 6
+    # a = 1
+    # b = 5
+    # r = 1
+    # R = 6
+    # h = 4.5
+    # H = 6
     # 4 нормальный набор:
-    a = 0.5
-    b = 2
-    r = 1
-    R = 6 # 3.5
-    h = 4.5
-    H = 6
+    # a = 0.5
+    # b = 2
+    # r = 1
+    # R = 3.5 # 3.5
+    # h = 4.5
+    # H = 6
 
 
     control_points, len_u, len_v = init_charge(a, b, r, R, h)
@@ -329,7 +329,7 @@ if __name__ == '__main__':
             #    print(it)
 
             control_points = points_shift(control_points, control_vector_u, control_vector_v, spl_x, spl_y, spl_z, R)
-            #control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
+            control_points, len_control_v = delete_inner_points(control_points, len_control_u, len_control_v)
             matrix_f_x, matrix_f_y, matrix_f_z = points_to_matrix(control_points, len_control_u, len_control_v)
 
             control_vector_u = np.arange(0, 1, 1/len_control_u)
@@ -343,7 +343,7 @@ if __name__ == '__main__':
             spl_y = Bispline(control_vector_u, control_vector_v, matrix_f_y)
             spl_z = Bispline(control_vector_u, control_vector_v, matrix_f_z)
 
-            draw_vector_u = np.arange(0, 1, 1/2)
+            draw_vector_u = np.arange(0, 1, 1/6)
             draw_vector_v = np.arange(0, 1 + 1/256, 1/256)
 
             
